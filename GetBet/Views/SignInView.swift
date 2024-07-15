@@ -1,115 +1,110 @@
 import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
-
-@MainActor
-final class SignInViewModel: ObservableObject {
-    
-    func signInGoogle() async throws {
-        let helper = SignInGoogleHelper()
-        let tokens = try await helper.signIn()
-        try await AuthenticationManager.shared.signInWithGoogle(tokens: tokens)
-    }
-}
+import FirebaseAuth
 
 struct SignInView: View {
     @StateObject private var viewModel = SignInViewModel()
-    @Binding var showSignInView: Bool
-    @State private var phoneNumber: String = ""
-    @State private var password: String = ""
-    
+    @ObservedObject var authState: AuthState
+
     var body: some View {
         NavigationView {
-            VStack {
-                Image("GetBet") // Replace "getbet" with the actual image name
+            VStack(spacing: 20) {
+
+                Image("GetBet")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .padding()
+                    .padding(.bottom, 40)
                 
-                // Phone Number Textfield
-                TextField("Email", text: $phoneNumber)
-                    .padding()
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                // Password Textfield
-                SecureField("Password", text: $password)
-                    .padding()
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                // Sign In Button
-                Button(action: {
-                    // Handle sign in logic
-                }) {
-                    Text("Sign In")
-                        .foregroundColor(.white)
+
+                VStack(spacing: 15) {
+                    TextField("Email", text: $viewModel.email)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(10)
+                        .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+
+                    SecureField("Password", text: $viewModel.password)
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
                 }
-                .padding()
-                
-                // Forgot Password Option
-                NavigationLink(destination: ForgotPasswordView())
-                {
+                .padding(.horizontal)
+
+                Button(action: {
+                    Task {
+                        await viewModel.signInWithEmail()
+                        if viewModel.isSignedIn {
+                            authState.isSignedIn = true
+                        }
+                    }
+                }) {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray)
+                            .cornerRadius(10)
+                    } else {
+                        Text("Sign In")
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 20)
+                .alert(isPresented: Binding<Bool>(
+                    get: { viewModel.errorMessage != nil },
+                    set: { _ in viewModel.errorMessage = nil }
+                )) {
+                    Alert(title: Text("Error"), message: Text(viewModel.errorMessage ?? ""), dismissButton: .default(Text("OK")))
+                }
+
+                Button(action: {
+                    if viewModel.email.isEmpty {
+                        viewModel.errorMessage = "Please enter your email to reset your password."
+                    } else {
+                        Task {
+                            await viewModel.sendPasswordReset(to: viewModel.email)
+                        }
+                    }
+                }) {
                     Text("Forgot Password?")
                         .foregroundColor(.blue)
-                        .padding()
                 }
-                
-                // Sign In with Google Button
+                .padding(.top, 10)
+                .padding(.bottom, 15)
+
+                HStack {
+                    Text("Don't have an account?")
+                    NavigationLink(destination: SignUpView(authState: authState)) {
+                        Text("Sign Up")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 16, weight: .bold))
+                            .underline()
+                    }
+                }
+                .padding(.bottom, 30)
+
                 GoogleSignInButton(viewModel: GoogleSignInButtonViewModel(scheme: .dark, style: .wide, state: .normal)) {
                     Task {
-                        do {
-                            try await viewModel.signInGoogle()
-                            showSignInView = false
-                        } catch {
-                            print(error)
+                        await viewModel.signInGoogle()
+                        if viewModel.isSignedIn {
+                            authState.isSignedIn = true
                         }
                     }
                 }
                 .padding()
-                
+
                 Spacer()
-                
-                NavigationLink(destination: SignUpView())
-                {
-                    Text("Don't have an account? ")
-                        .foregroundColor(.blue)
-                        .padding()
-
-                    Text("Sign Up")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 16, weight: .bold)) // Adjust size and weight as needed
-                        .underline() // Optional: Add underline for emphasis
-                        .padding()
-                }
-                .frame(maxWidth: .infinity)
-                .background(Color.white) // Optional: Add a background color
-
             }
             .padding()
-            .navigationBarTitle("Sign In/ Sign Up", displayMode: .inline) // Optional: Set the navigation bar title
+            .navigationBarTitle("Sign In", displayMode: .inline)
         }
     }
 }
 
-struct ForgotPasswordView: View {
-    var body: some View {
-        VStack {
-            Text("Forgot Password")
-                .font(.largeTitle)
-                .padding()
-            
-            // Top verification and other necessary UI for password recovery
-            
-            Spacer()
-        }
-        .padding()
-    }
-}
-
-struct SignInView_Previews: PreviewProvider {
-    static var previews: some View {
-        SignInView(showSignInView: .constant(false))
-    }
-}

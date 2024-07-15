@@ -1,40 +1,34 @@
-//
-//  SceneDelegate.swift
-//  GetBet
-//
-//  Created by Aasrith Mareddy on 15/10/23.
-//
-
 import UIKit
 import FirebaseAuth
 import SwiftUI
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    @State private var showSignInView: Bool = false
 
     var window: UIWindow?
+    @State private var showSignInView: Bool = false
+    @State private var navigateToHome: Bool = false
 
-        func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-            guard let windowScene = (scene as? UIWindowScene) else { return }
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        let window = UIWindow(windowScene: windowScene)
+        
+        // Check if a user is signed in
+        checkAuthentication(window: window)
+        
+        self.window = window
+    }
 
-            let window = UIWindow(windowScene: windowScene)
-
-            if Auth.auth().currentUser == nil {
-                let contentView = SignInView(showSignInView: $showSignInView)
-                let navController = UINavigationController(rootViewController: UIHostingController(rootView: contentView))
-                navController.navigationBar.isHidden = true // If you don't want to show the navigation bar
-                window.rootViewController = navController
-            } else {
-                let homePageView = HomePageView()
-                let navController = UINavigationController(rootViewController: UIHostingController(rootView: homePageView))
-                window.rootViewController = navController
-            }
-
-            window.makeKeyAndVisible()
-            self.window = window
-            
-        }
-
+    func checkAuthentication(window: UIWindow) {
+        // Create the root view and manage the state based on user authentication
+        let rootView = RootView()
+        
+        // Use UIHostingController to wrap the SwiftUI view
+        window.rootViewController = UIHostingController(rootView: rootView)
+        window.makeKeyAndVisible()
+    }
+    
+    // Additional SceneDelegate lifecycle methods as necessary
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
@@ -63,7 +57,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
-
 }
-

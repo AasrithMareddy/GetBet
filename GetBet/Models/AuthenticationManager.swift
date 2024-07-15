@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 import FirebaseAuth
 import GoogleSignIn
 
@@ -6,11 +7,13 @@ struct AuthDataResultModel {
     let uid: String
     let email: String?
     let photoUrl: String?
+    let isEmailVerified: Bool
     
     init(user: User) {
         self.uid = user.uid
         self.email = user.email
         self.photoUrl = user.photoURL?.absoluteString
+        self.isEmailVerified = user.isEmailVerified
     }
 }
 
@@ -20,6 +23,12 @@ final class AuthenticationManager {
     private var verificationId: String?
 
     private init() {}
+    func getAuthenticatedUser() throws -> AuthDataResultModel {
+        guard let user = Auth.auth().currentUser else {
+            throw URLError(.badServerResponse)
+        }
+        return AuthDataResultModel(user: user)
+    }
 
     // MARK: - Google Sign In
     
@@ -34,7 +43,8 @@ final class AuthenticationManager {
     @discardableResult
     func createUser(email: String, password: String) async throws -> AuthDataResultModel {
         let authDataResult = try await auth.createUser(withEmail: email, password: password)
-        return AuthDataResultModel(user: authDataResult.user)
+        let user = authDataResult.user
+        return AuthDataResultModel(user: user)
     }
     
     @discardableResult
@@ -47,51 +57,38 @@ final class AuthenticationManager {
         try await auth.sendPasswordReset(withEmail: email)
     }
     
-    func updatePassword(password: String) async throws {
-        guard let user = auth.currentUser else {
-            throw URLError(.badServerResponse)
-        }
-        try await user.updatePassword(to: password)
-    }
-    
-    func updateEmail(email: String) async throws {
-        guard let user = auth.currentUser else {
-            throw URLError(.badServerResponse)
-        }
-        try await user.updateEmail(to: email)
-    }
 
-    // MARK: - Phone Number Sign In
-    
-    @discardableResult
-    func startAuth(phoneNumber: String, completion: @escaping (Bool) -> Void) {
-        PhoneAuthProvider.provider().verifyPhoneNumber(phoneNumber, uiDelegate: nil) { [weak self] verificationId, error in
-            guard let verificationId = verificationId, error == nil else {
-                completion(false)
-                return
-            }
-            self?.verificationId = verificationId
-            completion(true)
-        }
-    }
-
-    @discardableResult
-    func verifyCode(smsCode: String, completion: @escaping (Bool) -> Void) {
-        guard let verificationId = verificationId else {
-            completion(false)
-            return
-        }
-        let credential = PhoneAuthProvider.provider().credential(withVerificationID: verificationId, verificationCode: smsCode)
-
-        auth.signIn(with: credential) { result, error in
-            guard result != nil, error == nil else {
-                completion(false)
-                return
-            }
-            completion(true)
-        }
-    }
-    
+//    // MARK: - Phone Number Sign In
+//    
+//    @discardableResult
+//    func startAuth(phoneNumber: String, completion: @escaping (Bool) -> Void) {
+//        PhoneAuthProvider.provider().verifyPhoneNumber(phoneNumber, uiDelegate: nil) { [weak self] verificationId, error in
+//            guard let verificationId = verificationId, error == nil else {
+//                completion(false)
+//                return
+//            }
+//            self?.verificationId = verificationId
+//            completion(true)
+//        }
+//    }
+//
+//    @discardableResult
+//    func verifyCode(smsCode: String, completion: @escaping (Bool) -> Void) {
+//        guard let verificationId = verificationId else {
+//            completion(false)
+//            return
+//        }
+//        let credential = PhoneAuthProvider.provider().credential(withVerificationID: verificationId, verificationCode: smsCode)
+//
+//        auth.signIn(with: credential) { result, error in
+//            guard result != nil, error == nil else {
+//                completion(false)
+//                return
+//            }
+//            completion(true)
+//        }
+//    }
+//    
     // MARK: - Common Sign In
     
     private func signIn(credential: AuthCredential) async throws -> AuthDataResultModel {

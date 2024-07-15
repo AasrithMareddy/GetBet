@@ -1,75 +1,79 @@
-//
-//  SignUpView.swift
-//  GetBet
-//
-//  Created by Aasrith Mareddy on 27/01/24.
-//
-
-// SignInView.swift
-// SignUpView.swift
 import SwiftUI
 
 struct HomePageView: View {
-    @State private var name: String = ""
-    @State private var phoneNumber: String = ""
-    @State private var otp: String = ""
-    @State private var password: String = ""
-    @State private var confirmPassword: String = ""
+    @ObservedObject var authState: AuthState
+
+    var body: some View {
+        TabView {
+            HomeTabView()
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
+            
+            BetsView()
+                .tabItem {
+                    Label("Bets", systemImage: "sportscourt.fill")
+                }
+            
+            NotificationsView()
+                .tabItem {
+                    Label("Notifications", systemImage: "bell.fill")
+                }
+            
+            SettingsView(authState: authState)
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+        }
+    }
+}
+
+struct HomeTabView: View {
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                NavigationLink(destination: CustomBetView()) {
+                    HomeCardView(title: "Custom Bet", image: "doc.text.fill", color: .blue)
+                }
+                
+                NavigationLink(destination: SportsBetView()) {
+                    HomeCardView(title: "Quantifiable Bet", image: "sportscourt.fill", color: .green)
+                }
+            }
+            .padding()
+            .navigationBarTitle("Home", displayMode: .inline)
+        }
+    }
+}
+
+struct HomeCardView: View {
+    let title: String
+    let image: String
+    let color: Color
     
     var body: some View {
-        VStack {
-            Text("Sign Up")
+        HStack {
+            Image(systemName: image)
+                .foregroundColor(.white)
                 .font(.largeTitle)
                 .padding()
             
-            // Name Textfield
-            TextField("Name", text: $name)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            Text(title)
+                .foregroundColor(.white)
+                .font(.headline)
             
-            // Phone Number Textfield
-            TextField("Phone Number", text: $phoneNumber)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            // OTP Textfield
-            TextField("OTP", text: $otp)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            // Password Textfield
-            SecureField("Password", text: $password)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            // Confirm Password Textfield
-            SecureField("Confirm Password", text: $confirmPassword)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            // Sign Up Button
-            Button(action: {
-                // Handle sign up logic
-            }) {
-                Text("Sign Up")
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.green)
-                    .cornerRadius(10)
-            }
-            .padding()
-            
-            // Sign Up with Google Button
-            Button(action: {
-                // Handle sign up with Google logic
-            }) {
-                Image("google") // Replace with the actual Google icon image
-                    .resizable()
-                    .frame(width: 30, height: 30)
-                Text("Sign Up with Google")
-            }
-            .padding()
+            Spacer()
         }
         .padding()
+        .frame(height: 80)
+        .background(LinearGradient(gradient: Gradient(colors: [color, color.opacity(0.8)]), startPoint: .leading, endPoint: .trailing))
+        .cornerRadius(10)
+        .shadow(color: color.opacity(0.6), radius: 10, x: 0, y: 5)
+    }
+}
+
+struct HomePageView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomePageView(authState: AuthState())
     }
 }
