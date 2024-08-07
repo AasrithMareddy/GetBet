@@ -10,12 +10,13 @@ struct SignInView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                Spacer()
 
-                Image("GetBet")
+                Image("getbetlogo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity)
                     .padding(.bottom, 40)
-                
 
                 VStack(spacing: 15) {
                     TextField("Email", text: $viewModel.email)
@@ -58,10 +59,15 @@ struct SignInView: View {
                 .padding(.horizontal)
                 .padding(.top, 20)
                 .alert(isPresented: Binding<Bool>(
-                    get: { viewModel.errorMessage != nil },
-                    set: { _ in viewModel.errorMessage = nil }
+                    get: { viewModel.errorMessage != nil || viewModel.passwordResetMessage != nil },
+                    set: { _ in
+                        viewModel.errorMessage = nil
+                        viewModel.passwordResetMessage = nil
+                    }
                 )) {
-                    Alert(title: Text("Error"), message: Text(viewModel.errorMessage ?? ""), dismissButton: .default(Text("OK")))
+                    Alert(title: Text(viewModel.errorMessage != nil ? "Error" : "Success"),
+                          message: Text(viewModel.errorMessage ?? viewModel.passwordResetMessage ?? ""),
+                          dismissButton: .default(Text("OK")))
                 }
 
                 Button(action: {
@@ -105,6 +111,27 @@ struct SignInView: View {
             .padding()
             .navigationBarTitle("Sign In", displayMode: .inline)
         }
+        .onAppear {
+            checkAuthState()
+        }
+    }
+
+    private func checkAuthState() {
+        Task {
+            do {
+                let user = try AuthenticationManager.shared.getAuthenticatedUser()
+                if user.isEmailVerified {
+                    authState.isSignedIn = true
+                }
+            } catch {
+                // Handle error
+            }
+        }
     }
 }
 
+struct SignInView_Previews: PreviewProvider {
+    static var previews: some View {
+        SignInView(authState: AuthState())
+    }
+}

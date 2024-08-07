@@ -1,10 +1,11 @@
 import SwiftUI
+import FirebaseFirestore
 import FirebaseAuth
 
 struct CustomBetView: View {
     @State private var title: String = ""
     @State private var description: String = ""
-    @State private var participants: [String] = []
+    @State private var participant: String = ""
     @State private var conditions: String = ""
     @State private var middlemanEmail: String = ""
     @State private var amount: String = ""
@@ -19,7 +20,7 @@ struct CustomBetView: View {
         VStack {
             Form {
                 BetDetailsSection(title: $title, description: $description)
-                ParticipantsSection(participants: $participants)
+                ParticipantsSection(participant: $participant)
                 ConditionsSection(conditions: $conditions)
                 MiddlemanSection(middlemanEmail: $middlemanEmail)
                 AmountSection(amount: $amount, currency: $currency)
@@ -28,8 +29,12 @@ struct CustomBetView: View {
                     isLoading: $isLoading,
                     showSuccessAnimation: $showSuccessAnimation,
                     title: title,
-                    participants: participants,
+                    participant: participant,
                     amount: amount,
+                    middlemanEmail: middlemanEmail,
+                    conditions: conditions,
+                    description: description,
+                    currency: currency,
                     showAlert: $showAlert,
                     alertMessage: $alertMessage,
                     presentationMode: presentationMode
@@ -42,7 +47,7 @@ struct CustomBetView: View {
             Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
         .fullScreenCover(isPresented: $showSuccessAnimation) {
-            SuccessView()
+            SuccessView(message: "Bet added successfully!")
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                         showSuccessAnimation = false
@@ -66,18 +71,11 @@ struct BetDetailsSection: View {
 }
 
 struct ParticipantsSection: View {
-    @Binding var participants: [String]
+    @Binding var participant: String
     
     var body: some View {
-        Section(header: Text("Participants")) {
-            ForEach(participants.indices, id: \.self) { index in
-                TextField("Participant Email", text: $participants[index])
-            }
-            Button(action: {
-                participants.append("")
-            }) {
-                Text("Add Participant")
-            }
+        Section(header: Text("Participant")) {
+            TextField("Participant Email", text: $participant)
         }
     }
 }
@@ -124,51 +122,100 @@ struct SubmitButton: View {
     @Binding var isLoading: Bool
     @Binding var showSuccessAnimation: Bool
     var title: String
-    var participants: [String]
+    var participant: String
     var amount: String
+    var middlemanEmail: String
+    var conditions: String
+    var description: String
+    var currency: String
     @Binding var showAlert: Bool
     @Binding var alertMessage: String
     var presentationMode: Binding<PresentationMode>
-    
+
     var body: some View {
         Button(action: {
             guard let userEmail = Auth.auth().currentUser?.email else { return }
-            if title.isEmpty {
-                alertMessage = "Bet title is required."
-                showAlert = true
-            } else if participants.isEmpty || participants.contains("") {
-                alertMessage = "At least one participant email is required."
-                showAlert = true
-            } else if participants.contains(userEmail) {
-                alertMessage = "You cannot add yourself as a participant."
-                showAlert = true
-            } else if amount.isEmpty {
-                alertMessage = "Bet amount is required."
-                showAlert = true
-            } else {
-                isLoading = true
-                let bet = Bet(
-                    title: title,
-                    description: "",
-                    participants: participants,
-                    conditions: "",
-                    middlemanEmail: nil,
-                    amount: amount,
-                    currency: "Virtual",
-                    status: "pending",
-                    createdBy: userEmail,
-                    notifications: []
-                )
-                
-                BetManager.shared.createBet(bet: bet) { result in
-                    isLoading = false
-                    switch result {
-                    case .success():
-                        showSuccessAnimation = true
-                    case .failure(let error):
-                        alertMessage = "Error creating bet: \(error.localizedDescription)"
+
+            isLoading = true
+            Task { // Use Task for asynchronous operations
+                do {
+                    if title.isEmpty {
+                        alertMessage = "Bet title is required."
                         showAlert = true
+                        isLoading = false
+                    } else if participant.isEmpty || participant.contains("") {
+                        alertMessage = "One participant email is required."
+                        showAlert = true
+                        isLoading = false
+                    } else if participant.lowercased() == userEmail {
+                        alertMessage = "You cannot add yourself as a participant."
+                        showAlert = true
+                        isLoading = false
+                    } else if middlemanEmail.lowercased() == userEmail {
+                        alertMessage = "You cannot add yourself as a middleman."
+                        showAlert = true
+                        isLoading = false
+                    } else if amount.isEmpty {
+                        alertMessage = "Bet amount is required."
+                        showAlert = true
+                        isLoading = false
+                    } else {
+                        // Check if participant email exists (if not empty)
+                        if !participant.isEmpty {
+                            let participantExists = try await AuthenticationManager.shared.checkEmailExists(email: participant.lowercased())
+                            if !participantExists {
+                                alertMessage = "Participant email does not exist."
+                                showAlert = true
+                                isLoading = false
+                                return // Stop the process if email doesn't exist
+                            }
+                        }
+
+                        // Check if middleman email exists (if not empty)
+                        if !middlemanEmail.isEmpty {
+                            let middlemanExists = try await AuthenticationManager.shared.checkEmailExists(email: middlemanEmail.lowercased())
+                            if !middlemanExists {
+                                alertMessage = "Middleman email does not exist."
+                                showAlert = true
+                                isLoading = false
+                                return // Stop the process if email doesn't exist
+                            }
+                        }
+                        let bet = Bet(
+                            title: title,
+                            description: description,
+                            participant: participant.lowercased(),
+                            conditions: conditions,
+                            middlemanEmail: middlemanEmail.isEmpty ? nil : middlemanEmail.lowercased(),
+                            middlemanStatus: "pending",
+                            participantStatus: "pending",
+                            amount: amount,
+                            currency: currency,
+                            status: "pending",
+                            createdBy: userEmail.lowercased(),
+                            result: nil,
+                            participantResult: nil,
+                            creatorResult: nil,
+                            middlemanResult: nil,
+                            timestamp: Timestamp(date: Date()),
+                            votedUsers: []
+                        )
+
+                        BetManager.shared.createBet(bet: bet) { result in
+                            isLoading = false
+                            switch result {
+                            case .success():
+                                showSuccessAnimation = true
+                            case .failure(let error):
+                                alertMessage = "Error creating bet: \(error.localizedDescription)"
+                                showAlert = true
+                            }
+                        }
                     }
+                } catch {
+                    alertMessage = "Error checking email existence: \(error.localizedDescription)"
+                    showAlert = true
+                    isLoading = false
                 }
             }
         }) {
@@ -192,20 +239,7 @@ struct SubmitButton: View {
     }
 }
 
-struct SuccessView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "checkmark.circle.fill")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100)
-                .foregroundColor(.green)
-            Text("Bet added successfully!")
-                .font(.title)
-                .padding()
-        }
-    }
-}
+
 
 struct CustomBetView_Previews: PreviewProvider {
     static var previews: some View {

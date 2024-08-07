@@ -47,15 +47,37 @@ final class AuthenticationManager {
         return AuthDataResultModel(user: user)
     }
     
+    func fetchSignInMethods(forEmail email: String) async throws -> [String] {
+        return try await Auth.auth().fetchSignInMethods(forEmail: email)
+    }
+    
+    func checkEmailExists(email: String) async throws -> Bool {
+        do {
+            let signInMethods = try await Auth.auth().fetchSignInMethods(forEmail: email)
+            return !signInMethods.isEmpty
+        } catch {
+            throw error // Re-throw the error to be handled in the SubmitButton's Task
+        }
+    }
+
+
+    
     @discardableResult
     func signInUser(email: String, password: String) async throws -> AuthDataResultModel {
-        let authDataResult = try await auth.signIn(withEmail: email, password: password)
-        return AuthDataResultModel(user: authDataResult.user)
+        do {
+            let authDataResult = try await auth.signIn(withEmail: email, password: password)
+            return AuthDataResultModel(user: authDataResult.user)
+        } catch let error as NSError {
+            throw error
+        }
     }
+
     
     func resetPassword(email: String) async throws {
         try await auth.sendPasswordReset(withEmail: email)
     }
+    
+    
     
 
 //    // MARK: - Phone Number Sign In

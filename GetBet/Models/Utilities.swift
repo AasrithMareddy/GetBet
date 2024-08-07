@@ -1,21 +1,13 @@
-//
-//  Utilities.swift
-//  GetBet
-//
-//  Created by Aasrith Mareddy on 27/01/24.
-//
-
 import Foundation
 import UIKit
 
-final class Utilities{
+final class Utilities {
     static let shared = Utilities()
     private init() {}
-    
+
     @MainActor
     func topViewController(controller: UIViewController? = nil) -> UIViewController? {
-        
-        let controller = controller ?? UIApplication.shared.keyWindow?.rootViewController
+        let controller = controller ?? getRootViewController()
         
         if let navigationController = controller as? UINavigationController {
             return topViewController(controller: navigationController.visibleViewController)
@@ -29,5 +21,13 @@ final class Utilities{
             return topViewController(controller: presented)
         }
         return controller
+    }
+
+    private func getRootViewController() -> UIViewController? {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            return nil
+        }
+        
+        return windowScene.windows.first { $0.isKeyWindow }?.rootViewController
     }
 }

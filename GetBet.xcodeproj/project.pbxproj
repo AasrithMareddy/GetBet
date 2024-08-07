@@ -24,6 +24,7 @@
 		74414BD12B65728700CE3D64 /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74414BD02B65728700CE3D64 /* AuthenticationManager.swift */; };
 		74414BD52B66411100CE3D64 /* SignInGoogleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74414BD42B66411100CE3D64 /* SignInGoogleHelper.swift */; };
 		74414BD72B66651200CE3D64 /* HomePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74414BD62B66651200CE3D64 /* HomePageView.swift */; };
+		7458F7692C622A0B0090EE71 /* BetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7458F7682C622A0B0090EE71 /* BetViewModel.swift */; };
 		74A36F332ADC401D009C1DA1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A36F322ADC401D009C1DA1 /* AppDelegate.swift */; };
 		74A36F352ADC401D009C1DA1 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A36F342ADC401D009C1DA1 /* SceneDelegate.swift */; };
 		74A36F3C2ADC401F009C1DA1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 74A36F3B2ADC401F009C1DA1 /* Assets.xcassets */; };
@@ -37,6 +38,9 @@
 		74C8C3362C31F78300BC934E /* BetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C3352C31F78300BC934E /* BetManager.swift */; };
 		74C8C3382C41B55E00BC934E /* Bet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C3372C41B55D00BC934E /* Bet.swift */; };
 		74C8C33A2C41E49700BC934E /* BetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C3392C41E49700BC934E /* BetDetailView.swift */; };
+		74C8C33C2C48463C00BC934E /* DetailedOngoingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C33B2C48463C00BC934E /* DetailedOngoingView.swift */; };
+		74C8C33E2C484FD600BC934E /* SuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C33D2C484FD600BC934E /* SuccessView.swift */; };
+		74C8C3402C4FBEB000BC934E /* DetailedCompletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C8C33F2C4FBEB000BC934E /* DetailedCompletedView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +52,7 @@
 		74414BD02B65728700CE3D64 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		74414BD42B66411100CE3D64 /* SignInGoogleHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInGoogleHelper.swift; sourceTree = "<group>"; };
 		74414BD62B66651200CE3D64 /* HomePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePageView.swift; sourceTree = "<group>"; };
+		7458F7682C622A0B0090EE71 /* BetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetViewModel.swift; sourceTree = "<group>"; };
 		74A36F2F2ADC401D009C1DA1 /* GetBet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GetBet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		74A36F322ADC401D009C1DA1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		74A36F342ADC401D009C1DA1 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -63,6 +68,9 @@
 		74C8C3352C31F78300BC934E /* BetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetManager.swift; sourceTree = "<group>"; };
 		74C8C3372C41B55D00BC934E /* Bet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bet.swift; sourceTree = "<group>"; };
 		74C8C3392C41E49700BC934E /* BetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetDetailView.swift; sourceTree = "<group>"; };
+		74C8C33B2C48463C00BC934E /* DetailedOngoingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedOngoingView.swift; sourceTree = "<group>"; };
+		74C8C33D2C484FD600BC934E /* SuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessView.swift; sourceTree = "<group>"; };
+		74C8C33F2C4FBEB000BC934E /* DetailedCompletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedCompletedView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +106,9 @@
 				74C8C3312C31E5A500BC934E /* SportsBetView.swift */,
 				74C8C3332C31E86D00BC934E /* NotficationsView.swift */,
 				74C8C3392C41E49700BC934E /* BetDetailView.swift */,
+				74C8C33B2C48463C00BC934E /* DetailedOngoingView.swift */,
+				74C8C33D2C484FD600BC934E /* SuccessView.swift */,
+				74C8C33F2C4FBEB000BC934E /* DetailedCompletedView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -111,6 +122,7 @@
 				74414BCE2B65435600CE3D64 /* Utilities.swift */,
 				74C8C3352C31F78300BC934E /* BetManager.swift */,
 				74C8C3372C41B55D00BC934E /* Bet.swift */,
+				7458F7682C622A0B0090EE71 /* BetViewModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -240,16 +252,20 @@
 				74A36F332ADC401D009C1DA1 /* AppDelegate.swift in Sources */,
 				74414BCA2B65264800CE3D64 /* SignInView.swift in Sources */,
 				74C8C3282C27288A00BC934E /* SignInViewModel.swift in Sources */,
+				7458F7692C622A0B0090EE71 /* BetViewModel.swift in Sources */,
 				74C8C32E2C30BBEB00BC934E /* BetsView.swift in Sources */,
 				74414BCC2B65265400CE3D64 /* SignUpView.swift in Sources */,
 				74C8C32C2C2E9E2600BC934E /* SettingsView.swift in Sources */,
 				74C8C33A2C41E49700BC934E /* BetDetailView.swift in Sources */,
+				74C8C33E2C484FD600BC934E /* SuccessView.swift in Sources */,
 				74A36F352ADC401D009C1DA1 /* SceneDelegate.swift in Sources */,
 				74C8C3382C41B55E00BC934E /* Bet.swift in Sources */,
 				74C8C32A2C2DFF7B00BC934E /* RootView.swift in Sources */,
 				74C8C3342C31E86D00BC934E /* NotficationsView.swift in Sources */,
+				74C8C33C2C48463C00BC934E /* DetailedOngoingView.swift in Sources */,
 				74C8C3302C31E58F00BC934E /* CustomBetView.swift in Sources */,
 				74C8C3322C31E5A500BC934E /* SportsBetView.swift in Sources */,
+				74C8C3402C4FBEB000BC934E /* DetailedCompletedView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

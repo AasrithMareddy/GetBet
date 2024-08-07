@@ -3,6 +3,7 @@ import FirebaseFirestore
 import FirebaseAuth
 
 struct BetsView: View {
+    @Binding var ongoingBetsCount: Int
     @State private var selectedTab = 0
     @State private var ongoingBets = [Bet]()
     @State private var completedBets = [Bet]()
@@ -18,63 +19,103 @@ struct BetsView: View {
             .padding()
             
             if selectedTab == 0 {
-                List(ongoingBets) { bet in
-                    VStack(alignment: .leading) {
-                        Text(bet.title)
-                            .font(.headline)
-                        Text(bet.amount)
-                            .font(.subheadline)
+                List(ongoingBets.indices, id: \.self) { index in
+                    let betViewModel = BetViewModel(bet: ongoingBets[index])
+                    NavigationLink(destination: DetailedOngoingView(betViewModel: betViewModel)) {
+                        VStack(alignment: .leading) {
+                            Text(ongoingBets[index].title)
+                                .font(.headline)
+                            Text("Created by: \(ongoingBets[index].createdBy)")
+                            Text("Amount: \(ongoingBets[index].amount) \(ongoingBets[index].currency)")
+                        }
                     }
                 }
             } else {
-                List(completedBets) { bet in
-                    VStack(alignment: .leading) {
-                        Text(bet.title)
-                            .font(.headline)
-                        Text(bet.amount)
-                            .font(.subheadline)
+                List(completedBets.indices, id: \.self) { index in
+                    NavigationLink(destination: DetailedCompletedView(bet: completedBets[index])) {
+                        VStack(alignment: .leading) {
+                            Text(completedBets[index].title)
+                                .font(.headline)
+                            Text("Created by: \(completedBets[index].createdBy)")
+                            Text("Amount: \(completedBets[index].amount) \(completedBets[index].currency)")
+                        }
                     }
                 }
             }
         }
         .navigationBarTitle("Your Bets", displayMode: .inline)
-        .onAppear(perform: fetchBets)
+        .onAppear {
+            BetsView.fetchBets { count, ongoingBets, completedBets in
+                self.ongoingBetsCount = count
+                self.ongoingBets = ongoingBets
+                self.completedBets = completedBets
+            }
+        }
     }
     
-    func fetchBets() {
-        guard let email = Auth.auth().currentUser?.email else { return }
+    static func fetchBets(completion: @escaping (Int, [Bet], [Bet]) -> Void) {
+        guard let email = Auth.auth().currentUser?.email else {
+            print("User not authenticated")
+            completion(0, [], [])
+            return
+        }
         
-        db.collection("bets")
-            .whereField("participants", arrayContains: email)
-            .getDocuments { participantSnapshot, error in
-                if let error = error {
-                    print("Error fetching participant documents: \(error)")
-                } else {
-                    let participantBets = participantSnapshot?.documents.compactMap { doc -> Bet? in
-                        try? doc.data(as: Bet.self)
-                    } ?? []
-                    
-                    db.collection("bets")
-                        .whereField("createdBy", isEqualTo: email)
-                        .getDocuments { creatorSnapshot, error in
-                            if let error = error {
-                                print("Error fetching creator documents: \(error)")
-                            } else {
-                                let creatorBets = creatorSnapshot?.documents.compactMap { doc -> Bet? in
-                                    try? doc.data(as: Bet.self)
-                                } ?? []
-                                
-                                let allBets = participantBets + creatorBets
-                                
-                                self.ongoingBets = allBets.filter { $0.status == "accepted" }
-                                self.completedBets = allBets.filter { $0.status == "completed" }
-                            }
-                        }
-                }
+        let db = Firestore.firestore()
+        let participantQuery = db.collection("bets")
+            .whereField("participant", isEqualTo: email)
+        let creatorQuery = db.collection("bets")
+            .whereField("createdBy", isEqualTo: email)
+        let middlemanQuery = db.collection("bets")
+            .whereField("middlemanEmail", isEqualTo: email)
+        
+        let group = DispatchGroup()
+        
+        var participantBets: [Bet] = []
+        var createdBets: [Bet] = []
+        var middlemanBets: [Bet] = []
+        
+        group.enter()
+        participantQuery.getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching participant documents: \(error)")
+            } else {
+                participantBets = snapshot?.documents.compactMap { doc in
+                    try? doc.data(as: Bet.self)
+                } ?? []
             }
+            group.leave()
+        }
+        
+        group.enter()
+        creatorQuery.getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching creator documents: \(error)")
+            } else {
+                createdBets = snapshot?.documents.compactMap { doc in
+                    try? doc.data(as: Bet.self)
+                } ?? []
+            }
+            group.leave()
+        }
+        
+        group.enter()
+        middlemanQuery.getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching middleman documents: \(error)")
+            } else {
+                middlemanBets = snapshot?.documents.compactMap { doc in
+                    try? doc.data(as: Bet.self)
+                } ?? []
+            }
+            group.leave()
+        }
+        
+        group.notify(queue: .main) {
+            let allBets = participantBets + createdBets + middlemanBets
+            let ongoingBets = allBets.filter { $0.status == "accepted"}
+            let completedBets = allBets.filter { $0.status == "completed" }
+            
+            completion(ongoingBets.count, ongoingBets, completedBets)
+        }
     }
 }
-    
-
-
-

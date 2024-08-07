@@ -101,26 +101,28 @@ struct SignUpView: View {
             return
         }
 
-        do {
-            let signInMethods = try await Auth.auth().fetchSignInMethods(forEmail: email)
-            if signInMethods.contains("google.com") {
-                errorMessage = "This email is already associated with a Google account. Please sign in with Google."
-                return
-            }
-        } catch {
-            errorMessage = "Failed to check sign-in methods: \(error.localizedDescription)"
-            return
-        }
-
         isLoading = true
+
         do {
+            // Check if email already exists (using your AuthenticationManager)
+            let signInMethods = try await AuthenticationManager.shared.fetchSignInMethods(forEmail: email)
+
+            if !signInMethods.isEmpty {
+                errorMessage = "This email is already registered. Please sign in or use a different email."
+                isLoading = false
+                return // Stop sign-up process
+            }
+            
+            // If email is unique, create the user
             _ = try await AuthenticationManager.shared.createUser(email: email, password: password)
             await sendVerificationEmail()
         } catch {
             errorMessage = error.localizedDescription
         }
+
         isLoading = false
     }
+
 
     private func sendVerificationEmail() async {
         if let user = Auth.auth().currentUser {

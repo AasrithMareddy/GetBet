@@ -2,6 +2,8 @@ import SwiftUI
 
 struct HomePageView: View {
     @ObservedObject var authState: AuthState
+    @State private var pendingBetsCount = 0
+    @State private var ongoingBetsCount = 0
 
     var body: some View {
         TabView {
@@ -10,23 +12,46 @@ struct HomePageView: View {
                     Label("Home", systemImage: "house.fill")
                 }
             
-            BetsView()
+            BetsView(ongoingBetsCount: $ongoingBetsCount)
                 .tabItem {
                     Label("Bets", systemImage: "sportscourt.fill")
                 }
+                .badge(ongoingBetsCount)
             
-            NotificationsView()
+            NotificationsView(pendingBetsCount: $pendingBetsCount)
                 .tabItem {
                     Label("Notifications", systemImage: "bell.fill")
                 }
+                .badge(pendingBetsCount)
             
             SettingsView(authState: authState)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
         }
+        .navigationBarBackButtonHidden(true)
+        .onAppear{
+            fetchPendingBets()
+            fetchOngoingBets()
+        }
+    }
+    
+    private func fetchPendingBets() {
+        NotificationsView.fetchBets { pendingCount, _, _ in
+            self.pendingBetsCount = pendingCount
+        }
+    }
+    
+    private func fetchOngoingBets() {
+        BetsView.fetchBets { ongoingCount, _, _ in
+            self.ongoingBetsCount = ongoingCount
+        }
     }
 }
+
+
+
+
 
 struct HomeTabView: View {
     var body: some View {
