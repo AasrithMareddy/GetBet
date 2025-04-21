@@ -12,7 +12,6 @@ struct Bet: Codable, Identifiable, Equatable, Hashable {
     var middlemanStatus: String
     var participantStatus: String
     var amount: String
-    var currency: String
     var status: String
     var createdBy: String
     var result: String?

@@ -19,15 +19,33 @@ struct NotificationsView: View {
             .padding()
             
             if selectedTab == 0 {
-                NotificationListView(bets: pendingBets, userEmail: Auth.auth().currentUser?.email ?? "")
+                List(pendingBets) { bet in
+                    NavigationLink(destination: BetDetailView(betViewModel: BetViewModel(bet: bet))) {
+                        VStack(alignment: .leading) {
+                            Text(bet.title)
+                                .font(.headline)
+                            Text("Created by: \(bet.createdBy)")
+                            Text("Amount: \(bet.amount)")
+                        }
+                    }
+                }
             } else {
-                NotificationListView(bets: rejectedBets, userEmail: Auth.auth().currentUser?.email ?? "")
+                List(rejectedBets) { bet in
+                    NavigationLink(destination: BetDetailView(betViewModel: BetViewModel(bet: bet))) {
+                        VStack(alignment: .leading) {
+                            Text(bet.title)
+                                .font(.headline)
+                            Text("Created by: \(bet.createdBy)")
+                            Text("Amount: \(bet.amount)")
+                        }
+                    }
+                }
             }
         }
         .navigationBarTitle("Notifications", displayMode: .inline)
         .onAppear {
-            NotificationsView.fetchBets { count, pendingBets, rejectedBets in
-                self.pendingBetsCount = count
+            NotificationsView.fetchBets { pendingBetsCount, pendingBets, rejectedBets in
+                self.pendingBetsCount = pendingBetsCount
                 self.pendingBets = pendingBets
                 self.rejectedBets = rejectedBets
             }
@@ -36,19 +54,15 @@ struct NotificationsView: View {
     
     static func fetchBets(completion: @escaping (Int, [Bet], [Bet]) -> Void) {
         guard let email = Auth.auth().currentUser?.email else {
+            print("User not authenticated")
             completion(0, [], [])
             return
         }
         
         let db = Firestore.firestore()
-        let participantQuery = db.collection("bets")
-            .whereField("participant", isEqualTo: email)
-        
-        let creatorQuery = db.collection("bets")
-            .whereField("createdBy", isEqualTo: email)
-        
-        let middlemanQuery = db.collection("bets")
-            .whereField("middlemanEmail", isEqualTo: email)
+        let participantQuery = db.collection("bets").whereField("participant", isEqualTo: email)
+        let creatorQuery = db.collection("bets").whereField("createdBy", isEqualTo: email)
+        let middlemanQuery = db.collection("bets").whereField("middlemanEmail", isEqualTo: email)
         
         let group = DispatchGroup()
         
@@ -61,9 +75,7 @@ struct NotificationsView: View {
             if let error = error {
                 print("Error fetching participant documents: \(error)")
             } else {
-                participantBets = snapshot?.documents.compactMap { doc in
-                    try? doc.data(as: Bet.self)
-                } ?? []
+                participantBets = snapshot?.documents.compactMap { try? $0.data(as: Bet.self) } ?? []
             }
             group.leave()
         }
@@ -73,9 +85,7 @@ struct NotificationsView: View {
             if let error = error {
                 print("Error fetching creator documents: \(error)")
             } else {
-                createdBets = snapshot?.documents.compactMap { doc in
-                    try? doc.data(as: Bet.self)
-                } ?? []
+                createdBets = snapshot?.documents.compactMap { try? $0.data(as: Bet.self) } ?? []
             }
             group.leave()
         }
@@ -85,49 +95,17 @@ struct NotificationsView: View {
             if let error = error {
                 print("Error fetching middleman documents: \(error)")
             } else {
-                middlemanBets = snapshot?.documents.compactMap { doc in
-                    try? doc.data(as: Bet.self)
-                } ?? []
+                middlemanBets = snapshot?.documents.compactMap { try? $0.data(as: Bet.self) } ?? []
             }
             group.leave()
         }
         
         group.notify(queue: .main) {
             let allBets = participantBets + createdBets + middlemanBets
-            let pendingBets = allBets.filter {
-                $0.status == "pending"
-            }
-            let rejectedBets = allBets.filter {
-                $0.status == "rejected"
-            }
+            let pendingBets = allBets.filter { $0.status == "pending" }
+            let rejectedBets = allBets.filter { $0.status == "rejected" }
+            
             completion(pendingBets.count, pendingBets, rejectedBets)
         }
     }
 }
-
-struct NotificationListView: View {
-    var bets: [Bet]
-    var userEmail: String
-    
-    var body: some View {
-        List(bets) { bet in
-            NavigationLink(destination: BetDetailView(bet: bet)) {
-                VStack(alignment: .leading) {
-                    Text(bet.title)
-                        .font(.headline)
-                    Text("Created by: \(bet.createdBy)")
-                    Text("Amount: \(bet.amount) \(bet.currency)")
-                    Text("Your Designation for the bet: \(BetManager.shared.getDesignation(for: bet, email: userEmail))")
-                    Text("Timestamp: \(bet.timestamp.dateValue(), formatter: dateFormatter)")
-                }
-            }
-        }
-    }
-}
-
-private let dateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .short
-    return formatter
-}()

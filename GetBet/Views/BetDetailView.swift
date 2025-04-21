@@ -3,19 +3,13 @@ import FirebaseFirestore
 import FirebaseAuth
 
 struct BetDetailView: View {
-    @StateObject private var betViewModel: BetViewModel
-    var bet: Bet
+    @StateObject var betViewModel: BetViewModel
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showSuccessAnimation = false
     @State private var successMessage = ""
     @Environment(\.presentationMode) var presentationMode
     @State private var currentUserEmail: String = ""
-
-    init(bet: Bet) {
-        self.bet = bet
-        _betViewModel = StateObject(wrappedValue: BetViewModel(bet: bet))
-    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -25,13 +19,13 @@ struct BetDetailView: View {
                 Text("Description: \(bet.description)")
                 Text("Created By: \(bet.createdBy)")
                 Text("Amount: \(bet.amount)")
-                Text("Currency: \(bet.currency)")
                 Text("Conditions: \(bet.conditions)")
                 Text("Participant: \(bet.participant)")
                 if let middlemanEmail = bet.middlemanEmail {
                     Text("Middleman: \(middlemanEmail)")
                     Text("Middleman Status: \(bet.middlemanStatus)")
                 }
+                Text("Participant Status: \(bet.participantStatus)")
                 Text("Designation: \(BetManager.shared.getDesignation(for: bet, email: currentUserEmail))")
                 Text("Status: \(bet.status)")
                 Text("Timestamp: \(bet.timestamp.dateValue(), formatter: dateFormatter)")

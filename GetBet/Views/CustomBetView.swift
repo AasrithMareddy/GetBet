@@ -34,7 +34,6 @@ struct CustomBetView: View {
                     middlemanEmail: middlemanEmail,
                     conditions: conditions,
                     description: description,
-                    currency: currency,
                     showAlert: $showAlert,
                     alertMessage: $alertMessage,
                     presentationMode: presentationMode
@@ -108,12 +107,6 @@ struct AmountSection: View {
         Section(header: Text("Bet Amount")) {
             TextField("Amount", text: $amount)
                 .keyboardType(.decimalPad)
-            
-            Picker("Currency", selection: $currency) {
-                Text("Real").tag("Real")
-                Text("Virtual").tag("Virtual")
-            }
-            .pickerStyle(SegmentedPickerStyle())
         }
     }
 }
@@ -127,7 +120,6 @@ struct SubmitButton: View {
     var middlemanEmail: String
     var conditions: String
     var description: String
-    var currency: String
     @Binding var showAlert: Bool
     @Binding var alertMessage: String
     var presentationMode: Binding<PresentationMode>
@@ -190,7 +182,6 @@ struct SubmitButton: View {
                             middlemanStatus: "pending",
                             participantStatus: "pending",
                             amount: amount,
-                            currency: currency,
                             status: "pending",
                             createdBy: userEmail.lowercased(),
                             result: nil,

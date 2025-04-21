@@ -9,6 +9,7 @@ struct BetsView: View {
     @State private var completedBets = [Bet]()
     let db = Firestore.firestore()
     
+    
     var body: some View {
         VStack {
             Picker("Bets", selection: $selectedTab) {
@@ -19,25 +20,24 @@ struct BetsView: View {
             .padding()
             
             if selectedTab == 0 {
-                List(ongoingBets.indices, id: \.self) { index in
-                    let betViewModel = BetViewModel(bet: ongoingBets[index])
-                    NavigationLink(destination: DetailedOngoingView(betViewModel: betViewModel)) {
+                List(ongoingBets) { bet in
+                    NavigationLink(destination: DetailedOngoingView(betViewModel: BetViewModel(bet: bet))) {
                         VStack(alignment: .leading) {
-                            Text(ongoingBets[index].title)
+                            Text(bet.title)
                                 .font(.headline)
-                            Text("Created by: \(ongoingBets[index].createdBy)")
-                            Text("Amount: \(ongoingBets[index].amount) \(ongoingBets[index].currency)")
+                            Text("Created by: \(bet.createdBy)")
+                            Text("Amount: \(bet.amount)")
                         }
                     }
                 }
             } else {
-                List(completedBets.indices, id: \.self) { index in
-                    NavigationLink(destination: DetailedCompletedView(bet: completedBets[index])) {
+                List(completedBets) { bet in
+                    NavigationLink(destination: DetailedCompletedView(bet: bet)) {
                         VStack(alignment: .leading) {
-                            Text(completedBets[index].title)
+                            Text(bet.title)
                                 .font(.headline)
-                            Text("Created by: \(completedBets[index].createdBy)")
-                            Text("Amount: \(completedBets[index].amount) \(completedBets[index].currency)")
+                            Text("Created by: \(bet.createdBy)")
+                            Text("Amount: \(bet.amount)")
                         }
                     }
                 }

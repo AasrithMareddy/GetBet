@@ -127,7 +127,7 @@ class BetManager {
         let betRef = db.collection("bets").document(betId)
 
         // Update both the role-specific result and the overall result
-        var dataToUpdate: [String: Any] = [
+        let dataToUpdate: [String: Any] = [
             role : result,
         ]
 

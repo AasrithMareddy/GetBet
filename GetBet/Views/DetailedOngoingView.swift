@@ -12,11 +12,7 @@ struct DetailedOngoingView: View {
     @State private var selectedResult: String = ""
     @Environment(\.presentationMode) var presentationMode
     @State private var currentUserEmail: String = ""
-    @State private var hasVoted = false
 
-    init(betViewModel: BetViewModel) {
-        _betViewModel = StateObject(wrappedValue: betViewModel)
-    }
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -24,7 +20,8 @@ struct DetailedOngoingView: View {
                 Text("Title: \(bet.title)")
                     .font(.headline)
                 Text("Description: \(bet.description)")
-                Text("Amount: \(bet.amount) \(bet.currency)")
+                Text("Created By: \(bet.createdBy)")
+                Text("Amount: \(bet.amount)")
                 Text("Conditions: \(bet.conditions)")
                 Text("Participant: \(bet.participant)")
                 Text("Designation: \(BetManager.shared.getDesignation(for: bet, email: currentUserEmail))")
@@ -33,10 +30,31 @@ struct DetailedOngoingView: View {
                     Text("Middleman Status: \(bet.middlemanStatus)")
                 }
                 Text("Status: \(bet.status)")
+                if let participantResult = bet.participantResult {
+                    Text("Participant Selected Result: \(participantResult)")
+                } else {
+                    Text("")
+                }
+                if let creatorResult = bet.creatorResult {
+                    Text("Creator Selected Result: \(creatorResult)")
+                } else {
+                    Text("")
+                }
+                if let middlemanResult = bet.middlemanResult {
+                    Text("Middleman Selected Result: \(middlemanResult)")
+                } else {
+                    Text("")
+                }
+                if let result = bet.result {
+                    Text("Result: \(result)")
+                        .fontWeight(.bold)
+                } else {
+                    Text("Result: Pending")
+                }
                 Spacer()
 
                 if bet.status == "accepted" {
-                    if !hasVoted && canVote(bet: bet) {
+                    if !betViewModel.hasVoted && canVote(bet: bet) {
                         VStack {
                             Button(action: {
                                 selectedResult = "\(bet.participant) won"
@@ -73,7 +91,7 @@ struct DetailedOngoingView: View {
                             }
                         }
                         .padding()
-                    } else if hasVoted {
+                    } else if betViewModel.hasVoted {
                         Text("You have already voted.")
                     } else if !canVote(bet: bet) {
                         Text("Waiting for other participants to vote.")
@@ -120,7 +138,6 @@ struct DetailedOngoingView: View {
     func fetchCurrentUserEmail() {
         if let email = Auth.auth().currentUser?.email {
             currentUserEmail = email
-            hasVoted = userHasVoted()
         } else {
             errorMessage = "Unable to fetch user email."
             showError = true
@@ -154,7 +171,6 @@ struct DetailedOngoingView: View {
                 manager.addVotedUser(betId: betId, email: currentUserEmail) { result in
                     switch result {
                     case .success:
-                        hasVoted = true
                         checkIfBetCompleted()
                     case .failure(let error):
                         errorMessage = error.localizedDescription

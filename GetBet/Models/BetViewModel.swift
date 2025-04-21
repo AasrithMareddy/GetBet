@@ -2,6 +2,7 @@ import SwiftUI
 import Firebase
 import FirebaseFirestoreSwift
 
+@MainActor
 final class BetViewModel: ObservableObject {
     @Published var bet: Bet?
     @Published var currentUserEmail = Auth.auth().currentUser?.email

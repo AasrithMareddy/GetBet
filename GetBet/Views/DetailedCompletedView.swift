@@ -13,7 +13,6 @@ struct DetailedCompletedView: View {
             Text("Description: \(bet.description)")
             Text("Created By: \(bet.createdBy)")
             Text("Amount: \(bet.amount)")
-            Text("Currency: \(bet.currency)")
             Text("Conditions: \(bet.conditions)")
             Text("Participant: \(bet.participant)")
             Text("Designation: \(BetManager.shared.getDesignation(for: bet, email: currentUserEmail))")
@@ -22,8 +21,27 @@ struct DetailedCompletedView: View {
                 Text("Middleman Status: \(bet.middlemanStatus)")
             }
             Text("Status: \(bet.status)")
-            Text("Result: \(String(describing: bet.result))")
-                .fontWeight(.bold)
+            if let participantResult = bet.participantResult {
+                Text("Participant Selected Result: \(participantResult)")
+            } else {
+                Text("")
+            }
+            if let creatorResult = bet.creatorResult {
+                Text("Creator Selected Result: \(creatorResult)")
+            } else {
+                Text("")
+            }
+            if let middlemanResult = bet.middlemanResult {
+                Text("Middleman Selected Result: \(middlemanResult)")
+            } else {
+                Text("")
+            }
+            if let result = bet.result {
+                Text("Result: \(result)")
+                    .fontWeight(.bold)
+            } else {
+                Text("Result: Pending")
+            }
             Spacer()
         }
         .padding()
